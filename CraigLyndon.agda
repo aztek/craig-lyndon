@@ -5,7 +5,7 @@ module CraigLyndon (n : ℕ) where
 open import Relation.Binary.PropositionalEquality using (_≡_)
 open import Data.Fin
 open import Data.Fin.Subset
-open import Data.Product
+open import Data.Product renaming (_×_ to _⋀_)
 open import Data.Vec
 open import Data.Bool using (Bool; true; false)
                       renaming (_∧_ to _∧♭_; _∨_ to _∨♭_; not to ¬♭_)
@@ -29,6 +29,7 @@ eval (f ⇒ g) i = (¬♭ eval f i) ∨♭ eval g i
 Model : Formula → Interpretation → Set
 Model f i = eval f i ≡ true
 
+infixl 5 ⊨_ 
 data ⊨_ (f : Formula) : Set where
   model : ∃ (Model f) → ⊨ f
 
@@ -44,17 +45,18 @@ atoms (f ⇒ g) = atoms f ∪ atoms g
 find-interpolant : (φ ψ : Formula) → Formula
 find-interpolant = {!!}
 
-interpolates-φ : (φ ψ : Formula) → ⊨ (φ ⇒ ψ) → ⊨ (φ ⇒ find-interpolant φ ψ)
-interpolates-φ = {!!}
+module Properties (φ ψ : Formula)
+                  (⊨φ⇒ψ : ⊨ φ ⇒ ψ) where
+  ρ = find-interpolant φ ψ
 
-interpolates-ψ : (φ ψ : Formula) → ⊨ (φ ⇒ ψ) → ⊨ (find-interpolant φ ψ ⇒ ψ)
-interpolates-ψ = {!!}
+  interpolates-φ : ⊨ φ ⇒ ρ
+  interpolates-φ = {!!}
 
-encloses-atoms : (φ ψ : Formula) → ⊨ (φ ⇒ ψ) →
-                 atoms (find-interpolant φ ψ) ⊆ atoms ψ ∩ atoms φ
-encloses-atoms = {!!}
+  interpolates-ψ : ⊨ ρ ⇒ ψ
+  interpolates-ψ = {!!}
 
-craig-lyndon : (φ ψ : Formula) → ⊨ (φ ⇒ ψ) →
-               ∃ λ ρ → (atoms ρ ⊆ atoms ψ ∩ atoms φ) × ⊨ (φ ⇒ ρ) × ⊨ (ρ ⇒ ψ)
-craig-lyndon φ ψ ⊨φ⇒ψ = find-interpolant φ ψ , encloses-atoms φ ψ ⊨φ⇒ψ ,
-                        interpolates-φ φ ψ ⊨φ⇒ψ , interpolates-ψ φ ψ ⊨φ⇒ψ 
+  encloses-atoms : atoms ρ ⊆ atoms ψ ∩ atoms φ
+  encloses-atoms = {!!}
+
+  craig-lyndon : (atoms ρ ⊆ atoms ψ ∩ atoms φ) ⋀ (⊨ φ ⇒ ρ) ⋀ (⊨ ρ ⇒ ψ)
+  craig-lyndon = encloses-atoms , interpolates-φ , interpolates-ψ 
