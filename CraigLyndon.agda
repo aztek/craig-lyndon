@@ -60,14 +60,17 @@ module Properties (φ ψ : Formula)
   open import Data.Fin.Subset.Props
 
   private
-    tt : ∀ f i → eval (f ⇒ f) i ≡ true
-    tt f i
-      with eval f i
-    ...  | true = refl
-    ...  | false = refl
-
     tautology : ∀ {χ} → ⊨ χ ⇒ χ
-    tautology {χ} = model (replicate true , tt χ (replicate true))
+    tautology {χ} = model (interpretation , helper χ interpretation)
+      where
+        interpretation : Interpretation
+        interpretation = replicate true
+
+        helper : ∀ f i → eval (f ⇒ f) i ≡ true
+        helper f i
+          with eval f i
+        ...  | true = refl
+        ...  | false = refl
 
   ρ = find-interpolant φ ψ
 
@@ -100,11 +103,11 @@ module Properties (φ ψ : Formula)
     ⊆-intersection {zero}  {[]} {[]} _ = λ z → z
     ⊆-intersection {suc n} {x ∷ xs} {y ∷ ys} p = helper
       where
-        zero-here : ∀ {n} {x} {xs : Subset n} → x ∷ xs [ zero ]= inside → x ≡ inside
-        zero-here here = refl
+        drop-here : ∀ {n} {x} {xs : Subset n} → x ∷ xs [ zero ]= inside → x ≡ inside
+        drop-here here = refl
 
         helper : (x ∷ xs) ⊆ (x ∷ xs) ∩ (y ∷ ys)
-        helper {zero}  q rewrite zero-here q | zero-here (p q) = here
+        helper {zero}  q rewrite drop-here q | drop-here (p q) = here
         helper {suc z} q = there (⊆-intersection (drop-there ∘ p ∘ there) (drop-there q))
 
     encloses-own-atoms : ∀ {xs ys : Atoms} → ∣ xs − ys ∣ ≡ 0 → xs ⊆ xs ∩ ys
