@@ -2,16 +2,17 @@ open import Data.Nat
 
 module CraigLyndon (n : ℕ) where
 
-open import Function
+open import Function using (_∘_)
 open import Relation.Binary.PropositionalEquality using (_≡_)
 open import Data.Fin using (Fin; suc; zero)
-open import Data.Fin.Subset
+open import Data.Fin.Subset hiding (⊤; ⊥)
 open import Data.Product renaming (_×_ to _⋀_)
 open import Data.Vec hiding ([_]; _∈_)
 open import Data.Bool using (Bool; true; false)
                       renaming (_∧_ to _∧♭_; _∨_ to _∨♭_; not to ¬♭_)
 
 data Formula : Set where
+  ⊤ ⊥ : Formula
   var : (x : Fin n) → Formula
   ¬_  : (f : Formula) → Formula
   _∧_ : (f g : Formula) → Formula
@@ -21,6 +22,8 @@ data Formula : Set where
 Interpretation = Vec Bool n
 
 eval : Formula → Interpretation → Bool
+eval ⊤       i = true
+eval ⊥       i = false
 eval (var x) i = lookup x i
 eval (¬ f)   i = ¬♭ eval f i
 eval (f ∧ g) i = eval f i ∧♭ eval g i
@@ -42,6 +45,7 @@ atoms (¬ f)   = atoms f
 atoms (f ∧ g) = atoms f ∪ atoms g
 atoms (f ∨ g) = atoms f ∪ atoms g
 atoms (f ⇒ g) = atoms f ∪ atoms g
+atoms const   = replicate outside
 
 ∣_−_∣ : ∀ {n} → Subset n → Subset n → ℕ
 ∣ [] − [] ∣ = 0
