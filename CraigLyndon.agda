@@ -8,10 +8,11 @@ open import Relation.Nullary
 open import Relation.Nullary.Negation using (contradiction)
 open import Data.Fin as Fin using (Fin; zero; suc; toℕ; fromℕ≤)
 open import Data.Fin.Subset
+open import Function
 open import Data.Empty
 open import Data.Fin.Subset.Props
 open import Data.Sum renaming (_⊎_ to _⋁_)
-open import Data.Product renaming (_×_ to _⋀_)
+open import Data.Product as Product renaming (_×_ to _⋀_)
 open import Data.Unit hiding (_≟_; _≤_)
 open import Data.Vec as Vec hiding ([_]; _∈_)
 open import Data.Bool as Bool using (Bool; T; if_then_else_)
@@ -72,28 +73,28 @@ _−_ : ∀ {m} → Subset m → Subset m → Subset m
 (inside ∷ α*) − (outside ∷ β*) = inside  ∷ (α* − β*)
 (_      ∷ α*) − (_       ∷ β*) = outside ∷ (α* − β*)
 
-⊆-− : ∀ {m} (α* β* : Subset m) {x} → x ∈ α* − β* → x ∈ α*
-⊆-− [] [] ()
-⊆-− (inside  ∷ α*) (outside ∷ β*) here = here
-⊆-− (inside  ∷ α*) (outside ∷ β*) (there x∈α*−β*) = there (⊆-− α* β* x∈α*−β*)
-⊆-− (inside  ∷ α*) (inside  ∷ β*) (there x∈α*−β*) = there (⊆-− α* β* x∈α*−β*)
-⊆-− (outside ∷ α*) (_       ∷ β*) (there x∈α*−β*) = there (⊆-− α* β* x∈α*−β*)
+⊆-diff : ∀ {m} (α* β* : Subset m) {x} → x ∈ α* − β* → x ∈ α*
+⊆-diff [] [] ()
+⊆-diff (inside  ∷ α*) (outside ∷ β*) here = here
+⊆-diff (inside  ∷ α*) (outside ∷ β*) (there x∈α*−β*) = there (⊆-diff α* β* x∈α*−β*)
+⊆-diff (inside  ∷ α*) (inside  ∷ β*) (there x∈α*−β*) = there (⊆-diff α* β* x∈α*−β*)
+⊆-diff (outside ∷ α*) (_       ∷ β*) (there x∈α*−β*) = there (⊆-diff α* β* x∈α*−β*)
 
-⊈-− : ∀ {m} (α* β* : Subset m) {x} → x ∈ α* − β* → x ∉ β*
-⊈-− [] [] ()
-⊈-− (inside  ∷ α*) (outside ∷ β*) here = λ ()
-⊈-− (inside  ∷ α*) (outside ∷ β*) (there x∈α*−β*) = ⊈-− α* β* x∈α*−β* ∘ drop-there
-⊈-− (inside  ∷ α*) (inside  ∷ β*) {zero} ()
-⊈-− (inside  ∷ α*) (inside  ∷ β*) {suc _} (there x∈α*−β*) = ⊈-− α* β* x∈α*−β* ∘ drop-there
-⊈-− (outside ∷ α*) (_       ∷ β*) {zero} ()
-⊈-− (outside ∷ α*) (_       ∷ β*) {suc _} (there x∈α*−β*) = ⊈-− α* β* x∈α*−β* ∘ drop-there
+⊈-diff : ∀ {m} (α* β* : Subset m) {x} → x ∈ α* − β* → x ∉ β*
+⊈-diff [] [] ()
+⊈-diff (inside  ∷ α*) (outside ∷ β*) here = λ ()
+⊈-diff (inside  ∷ α*) (outside ∷ β*) (there x∈α*−β*) = ⊈-diff α* β* x∈α*−β* ∘ drop-there
+⊈-diff (inside  ∷ α*) (inside  ∷ β*) {zero} ()
+⊈-diff (inside  ∷ α*) (inside  ∷ β*) {suc _} (there x∈α*−β*) = ⊈-diff α* β* x∈α*−β* ∘ drop-there
+⊈-diff (outside ∷ α*) (_       ∷ β*) {zero} ()
+⊈-diff (outside ∷ α*) (_       ∷ β*) {suc _} (there x∈α*−β*) = ⊈-diff α* β* x∈α*−β* ∘ drop-there
 
 drop-suc : ∀ m n → suc m ≤′ suc n → m ≤′ n
 drop-suc zero zero s = ≤′-refl
-drop-suc zero (suc n₁) (≤′-step s) = ≤′-step (drop-suc zero n₁ s)
+drop-suc zero (suc n) (≤′-step s) = ≤′-step (drop-suc zero n s)
 drop-suc (suc m) zero (≤′-step ())
-drop-suc (suc .n₁) (suc n₁) ≤′-refl = ≤′-refl
-drop-suc (suc m) (suc n₁) (≤′-step s) = ≤′-step (drop-suc (suc m) n₁ s)
+drop-suc (suc .n) (suc n) ≤′-refl = ≤′-refl
+drop-suc (suc m) (suc n) (≤′-step s) = ≤′-step (drop-suc (suc m) n s)
 
 fromℕ≤′ : ∀ m n → m <′ n → Fin n
 fromℕ≤′ _ zero ()
@@ -103,10 +104,10 @@ fromℕ≤′ (suc m) (suc n) m<′n = suc (fromℕ≤′ m n (drop-suc (suc m) 
 drop-suc₂ : ∀ m n → suc m ≤′ n → m ≤′ n
 drop-suc₂ zero zero ()
 drop-suc₂ zero (suc .0) ≤′-refl = ≤′-step ≤′-refl
-drop-suc₂ zero (suc n₁) (≤′-step s) = ≤′-step (drop-suc₂ zero n₁ s)
+drop-suc₂ zero (suc n) (≤′-step s) = ≤′-step (drop-suc₂ zero n s)
 drop-suc₂ (suc m) zero ()
 drop-suc₂ (suc m) (suc .(suc m)) ≤′-refl = ≤′-step ≤′-refl
-drop-suc₂ (suc m) (suc n₁) (≤′-step s) = ≤′-step (drop-suc₂ (suc m) n₁ s)
+drop-suc₂ (suc m) (suc n) (≤′-step s) = ≤′-step (drop-suc₂ (suc m) n s)
 
 open import Data.List using (List; []; _∷_)
 
@@ -121,10 +122,6 @@ iterate α* = helper {n} {≤′-refl} α*
 data Induction {n} (p : Subset n) : Set where
   []  : Empty p → Induction p
   _∷_ : ∀ {x} → x ∈ p → Induction (p [ x ]≔ outside) → Induction p
-
-data ∣_−_∣ {n} (α* β* : Subset n) : Set where
-  []  : ∀ {x} → x ∈ α* → x ∈ β* → ∣ α* − β* ∣
-  _∷_ : ∀ {x} → x ∈ α* → x ∉ β* → ∣ α* [ x ]≔ outside − β* ∣ → ∣ α* − β* ∣
 
 induction : (α* : Subset n) → Induction α*
 induction α* = helper {n} {≤′-refl} ∅ ([] Empty-∅) α*
@@ -153,82 +150,135 @@ false [ _ / _ ] = false
 (f ∨ g) [ x / h ] = f [ x / h ] ∨ g [ x / h ]
 (f ⇒ g) [ x / h ] = f [ x / h ] ⇒ g [ x / h ]
 
+data Connective : (Formula → Formula → Formula) → Set where
+  or   : Connective _∨_
+  and  : Connective _∧_
+  impl : Connective _⇒_
+
+∉-map : ∀ _⊕_ φ ψ ρ → Connective _⊕_ → ρ ∉ atoms φ → ρ ∉ atoms ψ → ρ ∉ atoms (φ ⊕ ψ)
+∉-map φ ψ ρ ρ∉φ ρ∉ψ ρ∈φ∨ψ = {!!}
+
+data Constant : Formula → Set where
+  true  : Constant true
+  false : Constant false
+
+∉-replace-true : ∀ φ ρ → ρ ∉ atoms (φ [ ρ / true ])
+∉-replace-true true  ρ = outside-∉ (replicate-all ρ)
+∉-replace-true false ρ = outside-∉ (replicate-all ρ)
+∉-replace-true (var x) ρ
+  with toℕ x ≟ toℕ ρ
+...  | yes _ = outside-∉ (replicate-all ρ)
+...  | no  ρ≠x = {!outside-∉ (replicate-all ρ)!}
+∉-replace-true (! φ) ρ = ∉-replace-true φ ρ
+∉-replace-true (φ ∧ ψ) ρ = ∉-map _∧_ (φ [ ρ / true ]) (ψ [ ρ / true ]) ρ and  (∉-replace-true φ ρ) (∉-replace-true ψ ρ)
+∉-replace-true (φ ∨ ψ) ρ = ∉-map _∨_ (φ [ ρ / true ]) (ψ [ ρ / true ]) ρ or   (∉-replace-true φ ρ) (∉-replace-true ψ ρ)
+∉-replace-true (φ ⇒ ψ) ρ = ∉-map _⇒_ (φ [ ρ / true ]) (ψ [ ρ / true ]) ρ impl (∉-replace-true φ ρ) (∉-replace-true ψ ρ)
+
+∉-replace-false : ∀ {φ ρ} → ρ ∉ atoms (φ [ ρ / false ])
+∉-replace-false = {!!}
+
+subst-replaces : ∀ {φ ρ} → ρ ∉ atoms (φ [ ρ / true ] ∨ φ [ ρ / false ])
+subst-replaces {φ} {ρ} = ∉-map _∨_ (φ [ ρ / true ]) (φ [ ρ / false ]) ρ or (∉-replace-true φ ρ) (∉-replace-false {φ} {ρ})
+
 find-interpolant : (φ ψ : Formula) → Formula
-find-interpolant φ ψ
-  with induction (atoms φ − atoms ψ)
-...  | [] _ = φ
-...  | _∷_ {x} x∈d i = {!!}
-{-
-  with ∃-diff (atoms φ) (atoms ψ) e
-...  | ρ , ρ∈xs , ρ∉ys = let φ′ : Formula
-                             φ′ = φ [ ρ / true ] ∨ φ [ ρ / false ]
-                          in {!!}
--}
+find-interpolant φ ψ = helper (induction (atoms φ − atoms ψ))
+  where
+    helper : Induction (atoms φ − atoms ψ) → Formula
+    helper ([] _) = φ
+    helper (_∷_ {ρ} ρ∈d α*)
+      with ⊆-diff (atoms φ) (atoms ψ) ρ∈d | ⊈-diff (atoms φ) (atoms ψ) ρ∈d
+    ...  | ρ∈atoms[φ]                     | ρ∉atoms[ψ]
+      with φ [ ρ / true ] ∨ φ [ ρ / false ]
+    ...  | φ′ = let ⊨φ′⇒ψ : ⊨ φ′ ⇒ ψ
+                    ⊨φ′⇒ψ = {!!}
+                    ⊨φ⇒φ′ : ⊨ φ ⇒ φ′
+                    ⊨φ⇒φ′ = {!!}
+                 in {!!}
 
-module Properties (φ ψ : Formula)
-                  (⊨φ⇒ψ : ⊨ φ ⇒ ψ) where
-  private
-    tautology : ∀ {χ} → ⊨ χ ⇒ χ
-    tautology {χ} = model (i , helper χ)
-      where
-        i : Interpretation
-        i = replicate Bool.true
+⇒-trans : ∀ {φ ρ ψ} → ⊨ φ ⇒ ρ → ⊨ ρ ⇒ ψ → ⊨ φ ⇒ ψ
+⇒-trans {φ} {ρ} {ψ} (model (x , proj₂)) (model (y , proj₄))
+  with eval φ x
+...  | Bool.true  = model (x , {!!})
+...  | Bool.false = {!!}
 
-        helper : ∀ f → Model (f ⇒ f) i
-        helper f
-          with eval f i
-        ...  | Bool.true  = tt
-        ...  | Bool.false = tt
+private
+  tautology : ∀ {χ} → ⊨ χ ⇒ χ
+  tautology {χ} = model (i , helper χ)
+    where
+      i : Interpretation
+      i = replicate Bool.true
 
-  ρ = find-interpolant φ ψ
+      helper : ∀ f → Model (f ⇒ f) i
+      helper f
+        with eval f i
+      ...  | Bool.true  = tt
+      ...  | Bool.false = tt
 
-  interpolates-φ : ⊨ φ ⇒ ρ
-  interpolates-φ
-    with induction (atoms φ − atoms ψ)
-  ...  | [] e = tautology
-  ...  | x ∷ i = {!!}
+private
+  diff-⊆ : ∀ {n} {xs ys : Subset n} → Empty (xs − ys) → xs ⊆ ys
+  diff-⊆ {n} {xs} {ys} p {x} = helper xs ys p x
+    where
+      helper : ∀ {m} (xs ys : Subset m) → Empty (xs − ys) →
+               ∀ α → α ∈ xs → α ∈ ys
+      helper [] [] _ _ ()
+      helper (inside  ∷ xs) (inside  ∷ ys) _ zero _ = here
+      helper (inside  ∷ xs) (inside  ∷ ys) e (suc α) (there α∈xs) = there (helper xs ys (e ∘ Product.map suc there) α α∈xs)
+      helper (inside  ∷ xs) (outside ∷ ys) e zero here = ⊥-elim $ e (zero , here)
+      helper (inside  ∷ xs) (outside ∷ ys) e (suc α) (there α∈xs) = there (helper xs ys (e ∘ const (zero , here)) α α∈xs)
+      helper (outside ∷ xs) (_       ∷ ys) e zero ()
+      helper (outside ∷ xs) (_       ∷ ys) e (suc α) (there α∈xs) = there (helper xs ys (e ∘ Product.map suc there) α α∈xs)
 
-  interpolates-ψ : ⊨ ρ ⇒ ψ
-  interpolates-ψ
-    with induction (atoms φ − atoms ψ)
-  ...  | [] e  = ⊨φ⇒ψ
-  ...  | x ∷ i = {!!}
+  ⊆-itself : ∀ {n} {xs : Subset n} → xs ⊆ xs
+  ⊆-itself = λ {_} {_} {_} z → z
 
-  private
-    diff-⊆ : ∀ {n} {xs ys : Subset n} → Empty (xs − ys) → xs ⊆ ys
-    diff-⊆ {n} {xs} {ys} p {x} = helper xs ys p x
-      where
-        helper : ∀ {m} (xs ys : Subset m) → Empty (xs − ys) →
-                 ∀ α → α ∈ xs → α ∈ ys
-        helper [] [] _ _ ()
-        helper (inside  ∷ xs) (inside  ∷ ys) _ zero _ = here
-        helper (inside  ∷ xs) (inside  ∷ ys) e (suc α) (there α∈xs) = there (helper xs ys (λ { (x , s) → e (suc x , there s) }) α α∈xs)
-        helper (inside  ∷ xs) (outside ∷ ys) e zero here = ⊥-elim (e (zero , here))
-        helper (inside  ∷ xs) (outside ∷ ys) e (suc α) (there α∈xs) = there (helper xs ys (λ _ → e (zero , here)) α α∈xs)
-        helper (outside ∷ xs) (_       ∷ ys) e zero ()
-        helper (outside ∷ xs) (_       ∷ ys) e (suc α) (there α∈xs) = there (helper xs ys (λ { (x , s) → e (suc x , there s) }) α α∈xs)
+  ⊆-intersection : ∀ {n} {xs ys : Subset n} → xs ⊆ ys → xs ⊆ xs ∩ ys
+  ⊆-intersection {zero}  {[]} {[]} _ = λ z → z
+  ⊆-intersection {suc n} {x ∷ xs} {y ∷ ys} xs⊆ys = helper
+    where
+      open import Relation.Binary.PropositionalEquality
 
-    ⊆-intersection : ∀ {n} {xs ys : Subset n} → xs ⊆ ys → xs ⊆ xs ∩ ys
-    ⊆-intersection {zero}  {[]} {[]} _ = λ z → z
-    ⊆-intersection {suc n} {x ∷ xs} {y ∷ ys} xs⊆ys = helper
-      where
-        open import Relation.Binary.PropositionalEquality
+      drop-here : ∀ {n} {s} {p : Subset n} → zero ∈ s ∷ p → s ≡ inside
+      drop-here here = refl
 
-        drop-here : ∀ {n} {s} {p : Subset n} → zero ∈ s ∷ p → s ≡ inside
-        drop-here here = refl
+      helper : x ∷ xs ⊆ (x ∷ xs) ∩ (y ∷ ys)
+      helper {zero}  z∈i rewrite drop-here z∈i | drop-here (xs⊆ys z∈i) = here
+      helper {suc z} s∈i = there (⊆-intersection (drop-there ∘ xs⊆ys ∘ there) (drop-there s∈i))
 
-        helper : x ∷ xs ⊆ (x ∷ xs) ∩ (y ∷ ys)
-        helper {zero}  z∈i rewrite drop-here z∈i | drop-here (xs⊆ys z∈i) = here
-        helper {suc z} s∈i = there (⊆-intersection (drop-there ∘ xs⊆ys ∘ there) (drop-there s∈i))
+  encloses-own-atoms : ∀ {n} {xs ys : Subset n} → Empty (xs − ys) → xs ⊆ xs ∩ ys
+  encloses-own-atoms = ⊆-intersection ∘ diff-⊆
 
-    encloses-own-atoms : ∀ {xs ys : Atoms} → Empty (xs − ys) → xs ⊆ xs ∩ ys
-    encloses-own-atoms = ⊆-intersection ∘ diff-⊆
+  ⊆-distrib-∩ : ∀ {n} {xs xs′ ys : Subset n} → xs ⊆ xs′ → xs ∩ ys ⊆ xs′ ∩ ys
+  ⊆-distrib-∩ = {!!}
 
-  encloses-atoms : atoms ρ ⊆ atoms φ ∩ atoms ψ
-  encloses-atoms
-    with induction (atoms φ − atoms ψ)
-  ...  | [] e = encloses-own-atoms e
-  ...  | x ∷ i = {!!}
+  ⊆-trans : ∀ {n} {xs ys zs : Subset n} → xs ⊆ ys → ys ⊆ zs → xs ⊆ zs
+  ⊆-trans = {!!}
 
-  craig-lyndon : (atoms ρ ⊆ atoms φ ∩ atoms ψ) ⋀ (⊨ φ ⇒ ρ) ⋀ (⊨ ρ ⇒ ψ)
-  craig-lyndon = encloses-atoms , interpolates-φ , interpolates-ψ
+interpolate : ∀ φ ψ → ⊨ φ ⇒ ψ → ∃ λ ρ → (atoms ρ ⊆ atoms φ ∩ atoms ψ) ⋀ (⊨ φ ⇒ ρ) ⋀ (⊨ ρ ⇒ ψ)
+interpolate φ ψ = helper φ ψ (induction $ atoms φ − atoms ψ)
+  where helper : ∀ φ ψ → Induction (atoms φ − atoms ψ) → ⊨ φ ⇒ ψ →
+                 ∃ λ ρ → (atoms ρ ⊆ atoms φ ∩ atoms ψ) ⋀ (⊨ φ ⇒ ρ) ⋀ (⊨ ρ ⇒ ψ)
+        helper φ ψ ([] e) ⊨φ⇒ψ = φ , encloses-own-atoms e , tautology , ⊨φ⇒ψ
+        helper φ ψ (_∷_ {ρ} ρ∈d i) ⊨φ⇒ψ
+          with φ [ ρ / true ] ∨ φ [ ρ / false ]
+        ...  | φ′ = χ , ⊆-trans χ-atoms (⊆-distrib-∩ φ′-atoms) , ⇒-trans ⊨φ⇒φ′ ⊨φ′⇒χ , ⊨χ⇒ψ
+          where hyp : ∃ λ χ → (atoms χ ⊆ atoms φ′ ∩ atoms ψ) ⋀ (⊨ φ′ ⇒ χ) ⋀ (⊨ χ ⇒ ψ)
+                hyp = {!!}
+
+                χ : Formula
+                χ = proj₁ hyp
+
+                χ-atoms : atoms χ ⊆ atoms φ′ ∩ atoms ψ
+                χ-atoms = proj₁ (proj₂ hyp)
+
+                ⊨φ′⇒χ : ⊨ φ′ ⇒ ψ
+                ⊨φ′⇒χ = proj₁ (proj₂ (proj₂ hyp))
+
+                ⊨χ⇒ψ : ⊨ χ ⇒ ψ
+                ⊨χ⇒ψ = proj₂ (proj₂ (proj₂ hyp))
+
+                ⊨φ⇒φ′ : ⊨ φ ⇒ φ′
+                ⊨φ⇒φ′ = {!!}
+
+                φ′-atoms : atoms φ′ ⊆ atoms φ
+                φ′-atoms = {!!}
+
