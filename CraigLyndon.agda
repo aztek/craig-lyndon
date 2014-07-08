@@ -41,8 +41,8 @@ Model : Formula → Interpretation → Set
 Model f i = T (eval f i)
 
 infixl 5 ⊨_
-data ⊨_ (f : Formula) : Set where
-  model : ∃ (Model f) → ⊨ f
+⊨_ : Formula → Set
+⊨ f = ∃ (Model f)
 
 Atoms = Subset n
 
@@ -196,14 +196,14 @@ find-interpolant φ ψ = helper (induction (atoms φ − atoms ψ))
                  in {!!}
 
 ⇒-trans : ∀ {φ ρ ψ} → ⊨ φ ⇒ ρ → ⊨ ρ ⇒ ψ → ⊨ φ ⇒ ψ
-⇒-trans {φ} {ρ} {ψ} (model (x , proj₂)) (model (y , proj₄))
+⇒-trans {φ} {ρ} {ψ} (x , proj₂) (y , proj₄)
   with eval φ x
-...  | Bool.true  = model (x , {!!})
+...  | Bool.true  = x , {!!}
 ...  | Bool.false = {!!}
 
 private
   tautology : ∀ {χ} → ⊨ χ ⇒ χ
-  tautology {χ} = model (i , helper χ)
+  tautology {χ} = i , helper χ
     where
       i : Interpretation
       i = replicate Bool.true
