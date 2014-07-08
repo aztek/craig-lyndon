@@ -1,12 +1,15 @@
 module Subset where
 
 open import Function
+open import Function.Equality using (_⟨$⟩_)
+open import Function.Equivalence using (_⇔_; equivalence; Equivalence; module Equivalence)
 open import Data.Empty
 open import Data.Fin as Fin using (Fin; zero; suc; toℕ; fromℕ≤)
 open import Data.Fin.Subset
 open import Data.Fin.Subset.Props
 open import Data.Nat
 open import Data.Product as Product
+open import Data.Sum as Sum
 open import Data.Vec as Vec hiding ([_]; _∈_)
 
 replicate-all : ∀ {n} {A : Set} {a : A} (x : Fin n) → replicate a [ x ]= a
@@ -70,7 +73,7 @@ data Induction {n} (p : Subset n) : Set where
   _∷_ : ∀ {x} → x ∈ p → Induction (p [ x ]≔ outside) → Induction p
 
 induction : ∀ {n} (α* : Subset n) → Induction α*
-induction {n} α* = helper {n} {≤′-refl} ∅ ([] Empty-∅) α*
+induction {n} = helper {n} {≤′-refl} ∅ ([] Empty-∅)
   where Empty-outside : ∀ {n} {p : Subset n} → Empty p → Empty (outside ∷ p)
         Empty-outside _ (zero , ())
         Empty-outside e (suc x , there x∈p) = e (x , x∈p)
@@ -98,7 +101,7 @@ diff-⊆ {n} {xs} {ys} p {x} = helper xs ys p x
     helper (outside ∷ xs) (_       ∷ ys) e (suc α) (there α∈xs) = there (helper xs ys (e ∘ Product.map suc there) α α∈xs)
 
 ⊆-itself : ∀ {n} {xs : Subset n} → xs ⊆ xs
-⊆-itself = λ {_} {_} {_} z → z
+⊆-itself x∈xs = x∈xs
 
 ⊆-intersection : ∀ {n} {xs ys : Subset n} → xs ⊆ ys → xs ⊆ xs ∩ ys
 ⊆-intersection {zero}  {[]} {[]} _ = λ z → z
@@ -116,10 +119,23 @@ diff-⊆ {n} {xs} {ys} p {x} = helper xs ys p x
 encloses-own-atoms : ∀ {n} {xs ys : Subset n} → Empty (xs − ys) → xs ⊆ xs ∩ ys
 encloses-own-atoms = ⊆-intersection ∘ diff-⊆
 
--- TODO
-postulate ⊆-distrib-∩ : ∀ {n} {xs xs′ ys : Subset n} → xs ⊆ xs′ → xs ∩ ys ⊆ xs′ ∩ ys
---⊆-distrib-∩ = {!!}
+∩⇔× : ∀ {n} {p₁ p₂ : Subset n} {x} → (x ∈ p₁ × x ∈ p₂) ⇔ x ∈ p₁ ∩ p₂
+∩⇔× = equivalence to (from _ _)
+  where
+  to : ∀ {n} {p₁ p₂ : Subset n} {x} → x ∈ p₁ × x ∈ p₂ → x ∈ p₁ ∩ p₂
+  to (here , here) = here
+  to (there x∈p₁ , there x∈p₂) = there (to (x∈p₁ , x∈p₂))
 
--- TODO
-postulate ⊆-trans : ∀ {n} {xs ys zs : Subset n} → xs ⊆ ys → ys ⊆ zs → xs ⊆ zs
---⊆-trans = {!!}
+  from : ∀ {n} (p₁ p₂ : Subset n) {x} → x ∈ p₁ ∩ p₂ → x ∈ p₁ × x ∈ p₂
+  from [] [] ()
+  from (inside ∷ p₁) (inside ∷ p₂) here = here , here
+  from (s₁     ∷ p₁) (s₂     ∷ p₂) (there x∈p₁∩p₂) =
+    Product.map there there (from p₁ p₂ x∈p₁∩p₂)
+
+⊆-distrib-∩ : ∀ {n} {p₁ p₂ p₃ : Subset n} → p₁ ⊆ p₂ → p₁ ∩ p₃ ⊆ p₂ ∩ p₃
+⊆-distrib-∩ p₁⊆p₂ x∈p₁∩p₃
+  with Equivalence.from ∩⇔× ⟨$⟩ x∈p₁∩p₃
+...  | x∈p₁ , x∈p₃ = Equivalence.to ∩⇔× ⟨$⟩ (p₁⊆p₂ x∈p₁ , x∈p₃)
+
+⊆-trans : ∀ {n} {p₁ p₂ p₃ : Subset n} → p₁ ⊆ p₂ → p₂ ⊆ p₃ → p₁ ⊆ p₃
+⊆-trans p₁⊆p₂ p₂⊆p₃ = p₂⊆p₃ ∘ p₁⊆p₂
