@@ -5,7 +5,9 @@ open import Data.Fin.Subset
 open import Data.Product renaming (_×_ to _⋀_)
 
 open import Subset
+open import Subset.Properties
 open import Formula
+open import Formula.Properties
 
 interpolate : ∀ {n} (φ ψ : Formula n) → ⊨ φ ⇒ ψ → ∃ λ ρ → (atoms ρ ⊆ atoms φ ∩ atoms ψ) ⋀ (⊨ φ ⇒ ρ) ⋀ (⊨ ρ ⇒ ψ)
 interpolate {n} φ ψ = helper φ ψ (induction $ atoms φ − atoms ψ)
