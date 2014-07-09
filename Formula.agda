@@ -1,17 +1,14 @@
-open import Data.Nat
-
 module Formula where
 
-open import Relation.Nullary
-open import Data.Fin as Fin using (Fin; zero; suc; toℕ; fromℕ≤)
+open import Data.Fin
+open import Data.Fin.Props
 open import Data.Fin.Subset
+open import Data.Nat using (ℕ)
+open import Data.Product
+open import Data.Vec
+open import Data.Bool as Bool using (Bool) renaming (_∧_ to ∧♭; _∨_ to ∨♭)
+open import Relation.Nullary using (yes; no)
 open import Function
-open import Data.Product as Product renaming (_×_ to _⋀_)
-open import Data.Vec as Vec hiding ([_]; _∈_)
-open import Data.Bool as Bool using (Bool; T)
-                      renaming (_∧_ to _∧♭_; _∨_ to _∨♭_; not to ¬♭_)
-
-open import Subset
 
 Var = Fin
 
@@ -23,17 +20,21 @@ data Formula (n : ℕ) : Set where
 
 Interpretation = Vec Bool
 
-eval : ∀ {n} → Formula n → Interpretation n → Bool
-eval true  i = Bool.true
-eval false i = Bool.false
-eval (var x) i = lookup x i
-eval (! f)   i = ¬♭ eval f i
-eval (f ∧ g) i = eval f i ∧♭ eval g i
-eval (f ∨ g) i = eval f i ∨♭ eval g i
-eval (f ⇒ g) i = (¬♭ eval f i) ∨♭ eval g i
+_⟪_⟫_ : ∀ {a b c d} {A : Set a} {B : Set b} {C : Set c} {D : Set d} →
+        (A → B) → (B → C → D) → (A → C) → A → D
+f ⟪ _*_ ⟫ g = λ x → f x * g x
 
-Model : ∀ {n} → Formula n → Interpretation n → Set
-Model f i = T (eval f i)
+eval : ∀ {n} → Formula n → Interpretation n → Bool
+eval true    = const Bool.true
+eval false   = const Bool.false
+eval (var x) = lookup x
+eval (! f)   = Bool.not ∘ eval f
+eval (f ∧ g) = eval f ⟪ ∧♭ ⟫ eval g
+eval (f ∨ g) = eval f ⟪ ∨♭ ⟫ eval g
+eval (f ⇒ g) = (Bool.not ∘ eval f) ⟪ ∨♭ ⟫ eval g
+
+Model : ∀ {n} → Formula n → _
+Model f = Bool.T ∘ eval f
 
 infixl 5 ⊨_
 ⊨_ : ∀ {n} → Formula n → Set
@@ -45,13 +46,13 @@ atoms (! f)   = atoms f
 atoms (f ∧ g) = atoms f ∪ atoms g
 atoms (f ∨ g) = atoms f ∪ atoms g
 atoms (f ⇒ g) = atoms f ∪ atoms g
-atoms const   = ∅
+atoms const   = replicate outside
 
 _[_/_] : ∀ {n} → Formula n → Var n → Formula n → Formula n
 true  [ _ / _ ] = true
 false [ _ / _ ] = false
 (var x) [ y / h ]
-  with toℕ x ≟ toℕ y
+  with x ≟ y
 ...  | yes _ = h
 ...  | no  _ = var x
 (! f) [ x / h ] = ! f [ x / h ]
