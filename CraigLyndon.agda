@@ -13,27 +13,19 @@ interpolate : ∀ {n} (φ ψ : Formula n) → ⊨ φ ⇒ ψ → ∃ λ ρ → (a
 interpolate {n} φ ψ = helper φ ψ (induction $ atoms φ − atoms ψ)
   where helper : (φ ψ : Formula n) → Induction (atoms φ − atoms ψ) → ⊨ φ ⇒ ψ →
                  ∃ λ ρ → (atoms ρ ⊆ atoms φ ∩ atoms ψ) ⋀ (⊨ φ ⇒ ρ) ⋀ (⊨ ρ ⇒ ψ)
-        helper φ ψ ([] e) ⊨φ⇒ψ = φ , encloses-own-atoms e , tautology {n} {φ} , ⊨φ⇒ψ
+        helper φ ψ ([] e) ⊨φ⇒ψ = φ , ⊆-intersection e , tautology {n} {φ} , ⊨φ⇒ψ
         helper φ ψ (_∷_ {ρ} ρ∈d i) ⊨φ⇒ψ
           with φ [ ρ / true ] ∨ φ [ ρ / false ]
-        ...  | φ′ = χ , ⊆-trans χ-atoms (⊆-distrib-∩ φ′-atoms) , ⇒-trans {n} {φ} {φ′} {χ} ⊨φ⇒φ′ ⊨φ′⇒χ , ⊨χ⇒ψ
-          where hyp : ∃ λ χ → (atoms χ ⊆ atoms φ′ ∩ atoms ψ) ⋀ (⊨ φ′ ⇒ χ) ⋀ (⊨ χ ⇒ ψ)
-                hyp = {!!}
-
-                χ : Formula n
-                χ = proj₁ hyp
-
-                χ-atoms : atoms χ ⊆ atoms φ′ ∩ atoms ψ
-                χ-atoms = proj₁ (proj₂ hyp)
-
-                ⊨φ′⇒χ : ⊨ φ′ ⇒ χ
-                ⊨φ′⇒χ = proj₁ (proj₂ (proj₂ hyp))
-
-                ⊨χ⇒ψ : ⊨ χ ⇒ ψ
-                ⊨χ⇒ψ = proj₂ (proj₂ (proj₂ hyp))
-
-                ⊨φ⇒φ′ : ⊨ φ ⇒ φ′
+        ...  | φ′
+          with helper φ′ ψ {!!} {!!}
+        ...  | χ , a[χ]⊆a[φ′]∩a[ψ] , ⊨φ′⇒χ , ⊨χ⇒ψ = χ , (⊆-distrib-∩ φ′-atoms) ∘ a[χ]⊆a[φ′]∩a[ψ] , ⊨φ⇒χ , ⊨χ⇒ψ
+          where ⊨φ⇒φ′ : ⊨ φ ⇒ φ′
                 ⊨φ⇒φ′ = {!!}
+
+                ⊨φ′⇒ψ : ⊨ φ′ ⇒ ψ
+                ⊨φ′⇒ψ = {!!}
 
                 φ′-atoms : atoms φ′ ⊆ atoms φ
                 φ′-atoms = {!!}
+
+                ⊨φ⇒χ = ⇒-trans {n} {φ} {φ′} {χ} ⊨φ⇒φ′ ⊨φ′⇒χ

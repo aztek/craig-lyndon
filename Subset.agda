@@ -1,3 +1,4 @@
+open import Data.Bool
 open import Data.Fin
 open import Data.Fin.Subset
 open import Data.Product
@@ -6,10 +7,10 @@ open import Data.Vec hiding (_∈_)
 module Subset where
 
 -- Difference between sets
+infixl 5 _−_
 _−_ : ∀ {n} → Subset n → Subset n → Subset n
 [] − [] = []
-(inside ∷ p₁) − (outside ∷ p₂) = inside  ∷ (p₁ − p₂)
-(_      ∷ p₁) − (_       ∷ p₂) = outside ∷ (p₁ − p₂)
+s₁ ∷ p₁ − s₂ ∷ p₂ = (s₁ ∧ not s₂) ∷ (p₁ − p₂)
 
 -- Induction over the subset
 data Induction {n} (p : Subset n) : Set where
