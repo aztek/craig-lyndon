@@ -9,23 +9,39 @@ open import Subset.Properties
 open import Formula
 open import Formula.Properties
 
-interpolate : ∀ {n} (φ ψ : Formula n) → ⊨ φ ⇒ ψ → ∃ λ ρ → (atoms ρ ⊆ atoms φ ∩ atoms ψ) ⋀ (⊨ φ ⇒ ρ) ⋀ (⊨ ρ ⇒ ψ)
-interpolate {n} φ ψ = helper φ ψ (induction $ atoms φ − atoms ψ)
-  where helper : (φ ψ : Formula n) → Induction (atoms φ − atoms ψ) → ⊨ φ ⇒ ψ →
-                 ∃ λ ρ → (atoms ρ ⊆ atoms φ ∩ atoms ψ) ⋀ (⊨ φ ⇒ ρ) ⋀ (⊨ ρ ⇒ ψ)
-        helper φ ψ ([] e) ⊨φ⇒ψ = φ , ⊆-intersection e , tautology {n} {φ} , ⊨φ⇒ψ
-        helper φ ψ (_∷_ {ρ} ρ∈d i) ⊨φ⇒ψ
-          with φ [ ρ / true ] ∨ φ [ ρ / false ]
-        ...  | φ′
-          with helper φ′ ψ {!!} {!!}
-        ...  | χ , a[χ]⊆a[φ′]∩a[ψ] , ⊨φ′⇒χ , ⊨χ⇒ψ = χ , (⊆-distrib-∩ φ′-atoms) ∘ a[χ]⊆a[φ′]∩a[ψ] , ⊨φ⇒χ , ⊨χ⇒ψ
-          where ⊨φ⇒φ′ : ⊨ φ ⇒ φ′
-                ⊨φ⇒φ′ = {!!}
+CraigLyndon : ∀ {n} → (A B : Formula n) → Set
+CraigLyndon A B = ⊨ A ⇒ B → ∃ λ C → (atoms C ⊆ atoms A ∩ atoms B) ⋀ (⊨ A ⇒ C) ⋀ (⊨ C ⇒ B)
 
-                ⊨φ′⇒ψ : ⊨ φ′ ⇒ ψ
-                ⊨φ′⇒ψ = {!!}
+interpolate : ∀ {n} (A B : Formula n) → CraigLyndon A B
+interpolate {n} A B = helper A B (induction $ atoms A − atoms B)
+  where
+    helper : ∀ A B → Induction (atoms A − atoms B) → CraigLyndon A B
+    helper A B ([] ¬∈) ⊨A⇒B = A , A⊆A∩B , ⊨A⇒A , ⊨A⇒B
+      where
+        A⊆A∩B : atoms A ⊆ atoms A ∩ atoms B
+        A⊆A∩B = ⊆-intersection ¬∈
 
-                φ′-atoms : atoms φ′ ⊆ atoms φ
-                φ′-atoms = {!!}
+        ⊨A⇒A = tautology {n} {A}
 
-                ⊨φ⇒χ = ⇒-trans {n} {φ} {φ′} {χ} ⊨φ⇒φ′ ⊨φ′⇒χ
+    helper A B (_∷_ {x} x∈d i) ⊨A⇒B
+      with elim-var A x
+    ...  | A′
+      with helper A′ B {!!} {!!}
+    ...  | C , C⊆A′∩B , ⊨A′⇒C , ⊨C⇒B = C , C⊆A∩B , ⊨A⇒C , ⊨C⇒B
+      where
+        ⊨A⇒A′ : ⊨ A ⇒ A′
+        ⊨A⇒A′ = {!!}
+
+        ⊨A′⇒B : ⊨ A′ ⇒ B
+        ⊨A′⇒B = {!!}
+
+        A′⊆A : atoms A′ ⊆ atoms A
+        A′⊆A = {!!}
+
+        A′∩B⊆A∩B : atoms A′ ∩ atoms B ⊆ atoms A ∩ atoms B
+        A′∩B⊆A∩B = ⊆-distrib-∩ A′⊆A
+
+        C⊆A∩B : atoms C ⊆ atoms A ∩ atoms B
+        C⊆A∩B = A′∩B⊆A∩B ∘ C⊆A′∩B
+
+        ⊨A⇒C = ⇒-trans {n} {A} {A′} {C} ⊨A⇒A′ ⊨A′⇒C
