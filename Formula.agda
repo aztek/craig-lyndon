@@ -6,12 +6,13 @@ open import Data.Fin.Subset
 open import Data.Nat using (ℕ)
 open import Data.Product
 open import Data.Vec
-open import Data.Bool as Bool using (Bool) renaming (_∧_ to ∧♭; _∨_ to ∨♭)
+open import Data.Bool as Bool using (Bool) renaming (_∧_ to ⋀; _∨_ to ⋁)
 open import Relation.Nullary using (yes; no)
 open import Function
 
 Var = Fin
 
+infixl 5 _⇒_
 data Formula (n : ℕ) : Set where
   true false : Formula n
   var : (x : Var n) → Formula n
@@ -29,14 +30,14 @@ eval true    = const Bool.true
 eval false   = const Bool.false
 eval (var x) = lookup x
 eval (! f)   = Bool.not ∘ eval f
-eval (f ∧ g) = eval f ⟪ ∧♭ ⟫ eval g
-eval (f ∨ g) = eval f ⟪ ∨♭ ⟫ eval g
-eval (f ⇒ g) = (Bool.not ∘ eval f) ⟪ ∨♭ ⟫ eval g
+eval (f ∧ g) = eval f ⟪ ⋀ ⟫ eval g
+eval (f ∨ g) = eval f ⟪ ⋁ ⟫ eval g
+eval (f ⇒ g) = (Bool.not ∘ eval f) ⟪ ⋁ ⟫ eval g
 
-Model : ∀ {n} → Formula n → _
+Model : ∀ {n} → Formula n → Interpretation n → Set
 Model f = Bool.T ∘ eval f
 
-infixl 5 ⊨_
+infixl 4 ⊨_
 ⊨_ : ∀ {n} → Formula n → Set
 ⊨ f = ∃ (Model f)
 
@@ -49,16 +50,19 @@ atoms (f ⇒ g) = atoms f ∪ atoms g
 atoms const   = replicate outside
 
 _[_/_] : ∀ {n} → Formula n → Var n → Formula n → Formula n
-true  [ _ / _ ] = true
-false [ _ / _ ] = false
-(var x) [ y / h ]
+(var x) [ y / C ]
   with x ≟ y
-...  | yes _ = h
+...  | yes _ = C
 ...  | no  _ = var x
-(! f) [ x / h ] = ! f [ x / h ]
-(f ∧ g) [ x / h ] = f [ x / h ] ∧ g [ x / h ]
-(f ∨ g) [ x / h ] = f [ x / h ] ∨ g [ x / h ]
-(f ⇒ g) [ x / h ] = f [ x / h ] ⇒ g [ x / h ]
+(! A) [ x / C ] = ! A [ x / C ]
+(A ∧ B) [ x / C ] = A [ x / C ] ∧ B [ x / C ]
+(A ∨ B) [ x / C ] = A [ x / C ] ∨ B [ x / C ]
+(A ⇒ B) [ x / C ] = A [ x / C ] ⇒ B [ x / C ]
+const [ _ / _ ] = const
+
+infixl 6 _∸_
+_∸_ : ∀ {n} (A : Formula n) (x : Var n) → Formula n
+A ∸ x = A [ x / true ] ∨ A [ x / false ]
 
 data Connective {n : ℕ} : (Formula n → Formula n → Formula n) → Set where
   or   : Connective _∨_
