@@ -39,7 +39,7 @@ diff-⊆ (s₁     ∷ p₁) (s₂      ∷ p₂) ¬∈ (there x∈p₁) =
 ⊆-intersection ¬∈ x∈p₁ = Equivalence.from ∩⇔× ⟨$⟩ (x∈p₁ , diff-⊆ _ _ ¬∈ x∈p₁)
 
 −-⊆ : ∀ {n} (p₁ p₂ : Subset n) → p₁ − p₂ ⊆ p₁
-−-⊆ [] [] x∈p₁−p₂ = x∈p₁−p₂
+−-⊆ [] [] ()
 −-⊆ (inside ∷ p₁) (outside ∷ p₂) here = here
-−-⊆ (_      ∷ p₁) (outside ∷ p₂) (there x∈p₁−p₂) = there (−-⊆ p₁ p₂ x∈p₁−p₂)
-−-⊆ (_      ∷ p₁) (inside  ∷ p₂) (there x∈p₁−p₂) = there (−-⊆ p₁ p₂ x∈p₁−p₂)
+−-⊆ (_      ∷ p₁) (_       ∷ p₂) (there x∈p₁−p₂) = there (−-⊆ p₁ p₂ x∈p₁−p₂)
+
