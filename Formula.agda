@@ -19,6 +19,10 @@ data Formula (n : ℕ) : Set where
   !_  : (f : Formula n) → Formula n
   _∧_ _∨_ _⇒_ : (f g : Formula n) → Formula n
 
+⌜_⌝ : ∀ {n} → Bool → Formula n
+⌜ Bool.true  ⌝ = true
+⌜ Bool.false ⌝ = false
+
 Interpretation = Vec Bool
 
 _⟪_⟫_ : ∀ {a b c d} {A : Set a} {B : Set b} {C : Set c} {D : Set d} →
@@ -39,7 +43,7 @@ Model f = Bool.T ∘ eval f
 
 infixl 4 ⊨_
 ⊨_ : ∀ {n} → Formula n → Set
-⊨ f = ∃ (Model f)
+⊨ A = ∃ (Model A)
 
 atoms : ∀ {n} → Formula n → Subset n
 atoms (var x) = ⁅ x ⁆
@@ -68,7 +72,3 @@ data Connective {n : ℕ} : (Formula n → Formula n → Formula n) → Set wher
   or   : Connective _∨_
   and  : Connective _∧_
   impl : Connective _⇒_
-
-data Constant {n : ℕ} : Formula n → Set where
-  true  : Constant true
-  false : Constant false
